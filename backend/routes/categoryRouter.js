@@ -4,25 +4,25 @@ const isAuthenticated = require("../middlewares/isAuth");
 const categoryController = require("../controllers/categoryCtrl");
 const categoryRouter = express.Router();
 
-//!add
+// add
 categoryRouter.post(
   "/api/v1/categories/create",
   isAuthenticated,
   categoryController.create
 );
-//! lists
+// list
 categoryRouter.get(
   "/api/v1/categories/lists",
   isAuthenticated,
   categoryController.lists
 );
-//! update
+// update
 categoryRouter.put(
   "/api/v1/categories/update/:categoryId",
   isAuthenticated,
   categoryController.update
 );
-//! delete
+// delete
 categoryRouter.delete(
   "/api/v1/categories/delete/:id",
   isAuthenticated,

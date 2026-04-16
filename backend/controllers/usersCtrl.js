@@ -3,59 +3,68 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../model/User");
 
-//!User Registration
+const JWT_SECRET = process.env.JWT_SECRET || "moneyWiseKey";
 
 const usersController = {
-  //!Register
+  // register a new user
   register: asyncHandler(async (req, res) => {
     const { username, email, password } = req.body;
-    //!Validate
+
+    // validate required fields
     if (!username || !email || !password) {
-      throw new Error("Please all fields are required");
+      res.status(400);
+      throw new Error("Please provide username, email, and password");
     }
-    //!Check if user already exists
+
+    // check if user already exists
     const userExists = await User.findOne({ email });
     if (userExists) {
+      res.status(400);
       throw new Error("User already exists");
     }
-    //!Hash the user password
-    const salt = await bcrypt.genSalt(10);
+
+    // hash password before saving
+    const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(password, salt);
-    //! Create the user and save into db
+
     const userCreated = await User.create({
       email,
       username,
       password: hashedPassword,
     });
-    //! Send the response
 
-    res.json({
+    res.status(201).json({
       username: userCreated.username,
       email: userCreated.email,
       id: userCreated._id,
     });
   }),
-  //!Login
+
+  // login existing user
   login: asyncHandler(async (req, res) => {
-    //! Get the user data
     const { email, password } = req.body;
-    //!check if email is valid
+
+    // find user by email
     const user = await User.findOne({ email });
     if (!user) {
+      res.status(401);
       throw new Error("Invalid login credentials");
     }
-    //! Compare the user password
+
+    // compare plaintext with hashed password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
+      res.status(401);
       throw new Error("Invalid login credentials");
     }
-    //! Generate a token
-    const token = jwt.sign({ id: user._id }, "masynctechKey", {
+
+    // generate jwt token
+    const token = jwt.sign({ id: user._id }, JWT_SECRET, {
       expiresIn: "30d",
     });
-    //!Send the response
+
     res.json({
-      message: "Login Success",
+      message: "Login success",
       token,
       id: user._id,
       email: user.email,
@@ -63,40 +72,47 @@ const usersController = {
     });
   }),
 
-  //!profile
+  // get current user profile
   profile: asyncHandler(async (req, res) => {
-    //! Find the user
-    console.log(req.user);
     const user = await User.findById(req.user);
     if (!user) {
+      res.status(404);
       throw new Error("User not found");
     }
-    //!Send the response
+
     res.json({ username: user.username, email: user.email });
   }),
-  //! Change password
+
+  // change current user password
   changeUserPassword: asyncHandler(async (req, res) => {
     const { newPassword } = req.body;
-    //! Find the user
+    if (!newPassword) {
+      res.status(400);
+      throw new Error("New password is required");
+    }
+
     const user = await User.findById(req.user);
     if (!user) {
+      res.status(404);
       throw new Error("User not found");
     }
-    //! Hash the new password before saving
-    //!Hash the user password
-    const salt = await bcrypt.genSalt(10);
+
+    // hash new password before saving
+    const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
     user.password = hashedPassword;
-    //! ReSave
+
     await user.save({
       validateBeforeSave: false,
     });
-    //!Send the response
-    res.json({ message: "Password Changed successfully" });
+
+    res.json({ message: "Password changed successfully" });
   }),
-  //! update user profile
+
+  // update current user profile
   updateUserProfile: asyncHandler(async (req, res) => {
     const { email, username } = req.body;
+
     const updatedUser = await User.findByIdAndUpdate(
       req.user,
       {
@@ -107,6 +123,12 @@ const usersController = {
         new: true,
       }
     );
+
+    if (!updatedUser) {
+      res.status(404);
+      throw new Error("User not found");
+    }
+
     res.json({ message: "User profile updated successfully", updatedUser });
   }),
 };

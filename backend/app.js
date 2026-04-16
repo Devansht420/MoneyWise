@@ -1,34 +1,39 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+require("dotenv").config();
 const userRouter = require("./routes/userRouter");
 const errorHandler = require("./middlewares/errorHandlerMiddleware");
 const categoryRouter = require("./routes/categoryRouter");
 const transactionRouter = require("./routes/transactionRouter");
 const app = express();
 
-//!Connect to mongodb
+const PORT = process.env.PORT || 8000;
+const MONGO_URI =
+  process.env.MONGO_URI || "mongodb://localhost:27017/mern-expenses";
+const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
+
+// connect to mongodb
 mongoose
-  .connect("mongodb://localhost:27017/mern-expenses")
+  .connect(MONGO_URI)
   .then(() => console.log("DB Connected"))
   .catch((e) => console.log(e));
 
-//! Cors config
+// cors config
 const corsOptions = {
-  origin: ["http://localhost:5173"],
+  origin: [CLIENT_URL],
 };
 app.use(cors(corsOptions));
-//!Middlewares
-app.use(express.json()); //?Pass incoming json data
-//!Routes
+// middlewares
+app.use(express.json());
+// routes
 app.use("/", userRouter);
 app.use("/", categoryRouter);
 app.use("/", transactionRouter);
-//! Error
+// error handler
 app.use(errorHandler);
 
-//!Start the server
-const PORT = process.env.PORT || 8000;
+// start the server
 app.listen(PORT, () =>
   console.log(`Server is running on this port... ${PORT} `)
 );

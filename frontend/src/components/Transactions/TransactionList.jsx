@@ -7,14 +7,14 @@ import { listTransactionsAPI } from "../../services/transactions/transactionServ
 import { listCategoriesAPI } from "../../services/category/categoryService";
 
 const TransactionList = () => {
-  //!Filtering state
+  // filtering state
   const [filters, setFilters] = useState({
     startDate: "",
     endDate: "",
     type: "",
     category: "",
   });
-  //!Handle Filter Change
+  // handle filter changes
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));

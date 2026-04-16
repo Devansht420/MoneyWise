@@ -5,25 +5,25 @@ const categoryController = require("../controllers/categoryCtrl");
 const transactionController = require("../controllers/transactionCtrl");
 const transactionRouter = express.Router();
 
-//!add
+// add
 transactionRouter.post(
   "/api/v1/transactions/create",
   isAuthenticated,
   transactionController.create
 );
-//! lists
+// list
 transactionRouter.get(
   "/api/v1/transactions/lists",
   isAuthenticated,
   transactionController.getFilteredTransactions
 );
-//! update
+// update
 transactionRouter.put(
   "/api/v1/transactions/update/:id",
   isAuthenticated,
   transactionController.update
 );
-//! delete
+// delete
 transactionRouter.delete(
   "/api/v1/transactions/delete/:id",
   isAuthenticated,

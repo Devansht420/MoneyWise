@@ -9,7 +9,7 @@ import { loginAPI } from "../../services/users/userService";
 import AlertMessage from "../Alert/AlertMessage";
 import { loginAction } from "../../redux/slice/authSlice";
 
-//! Validations
+// validations
 const validationSchema = Yup.object({
   email: Yup.string().email("Invalid").required("Email is required"),
   password: Yup.string()
@@ -18,11 +18,11 @@ const validationSchema = Yup.object({
 });
 
 const LoginForm = () => {
-  //Navigate
+  // navigate
   const navigate = useNavigate();
-  //Dispatch
+  // dispatch
   const dispatch = useDispatch();
-  // Mutation
+  // mutation
   const { mutateAsync, isPending, isError, error, isSuccess } = useMutation({
     mutationFn: loginAPI,
     mutationKey: ["login"],
@@ -30,26 +30,25 @@ const LoginForm = () => {
 
   const formik = useFormik({
     initialValues: {
-      email: "ben@gmail.com",
-      password: "123456",
+      email: "",
+      password: "",
     },
-    // Validations
+    // validations
     validationSchema,
-    //Submit
+    // submit
     onSubmit: (values) => {
-      console.log(values);
-      //http request
+      // send login request
       mutateAsync(values)
         .then((data) => {
-          //dispatch
+          // update redux state
           dispatch(loginAction(data));
-          //Save the user into localStorage
+          // save user data in local storage
           localStorage.setItem("userInfo", JSON.stringify(data));
         })
-        .catch((e) => console.log(e));
+        .catch(() => {});
     },
   });
-  //Redirect
+  // redirect after successful login
   useEffect(() => {
     setTimeout(() => {
       if (isSuccess) {
@@ -65,7 +64,7 @@ const LoginForm = () => {
       <h2 className="text-3xl font-semibold text-center text-gray-800">
         Login
       </h2>
-      {/* Display messages */}
+      {/* display messages */}
       {isPending && <AlertMessage type="loading" message="Login you in...." />}
       {isError && (
         <AlertMessage type="error" message={error.response.data.message} />
@@ -75,7 +74,7 @@ const LoginForm = () => {
         Login to access your account
       </p>
 
-      {/* Input Field - Email */}
+      {/* input field - email */}
       <div className="relative">
         <FaEnvelope className="absolute top-3 left-3 text-gray-400" />
         <input
@@ -90,7 +89,7 @@ const LoginForm = () => {
         )}
       </div>
 
-      {/* Input Field - Password */}
+      {/* input field - password */}
       <div className="relative">
         <FaLock className="absolute top-3 left-3 text-gray-400" />
         <input
@@ -105,7 +104,7 @@ const LoginForm = () => {
         )}
       </div>
 
-      {/* Submit Button */}
+      {/* submit button */}
       <button
         type="submit"
         className="w-full bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-150 ease-in-out"

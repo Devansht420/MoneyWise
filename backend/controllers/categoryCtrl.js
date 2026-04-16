@@ -3,30 +3,33 @@ const Category = require("../model/Category");
 const Transaction = require("../model/Transaction");
 
 const categoryController = {
-  //!add
+  // add category
   create: asyncHandler(async (req, res) => {
     const { name, type } = req.body;
     if (!name || !type) {
+      res.status(400);
       throw new Error("Name and type are required for creating a category");
     }
-    //Convert the name to lowercase
+    // convert name to lowercase
     const normalizedName = name.toLowerCase();
-    //! Check if the type is valid
+    // validate category type
     const validTypes = ["income", "expense"];
     if (!validTypes.includes(type.toLowerCase())) {
+      res.status(400);
       throw new Error("Invalid category type" + type);
     }
-    //!Check if category already exists on the user
+    // check if category already exists for the user
     const categoryExists = await Category.findOne({
       name: normalizedName,
       user: req.user,
     });
     if (categoryExists) {
+      res.status(400);
       throw new Error(
         `Category ${categoryExists.name} already exists in the database`
       );
     }
-    //! Create the category
+    // create category
     const category = await Category.create({
       name: normalizedName,
       user: req.user,
@@ -35,27 +38,31 @@ const categoryController = {
     res.status(201).json(category);
   }),
 
-  //!lists
+  // list categories
   lists: asyncHandler(async (req, res) => {
     const categories = await Category.find({ user: req.user });
     res.status(200).json(categories);
   }),
 
-  //!update
+  // update category
   update: asyncHandler(async (req, res) => {
     const { categoryId } = req.params;
     const { type, name } = req.body;
-    const normalizedName = name.toLowerCase();
+    const normalizedName = name?.toLowerCase();
     const category = await Category.findById(categoryId);
-    if (!category && category.user.toString() !== req.user.toString()) {
+
+    if (!category || category.user.toString() !== req.user.toString()) {
+      res.status(404);
       throw new Error("Category not found or user not authorized");
     }
+
     const oldName = category.name;
-    //! Update category properties
+    // update category properties
     category.name = normalizedName || category.name;
     category.type = type || category.type;
     const updatedCategory = await category.save();
-    //Update affected transaction
+
+    // update affected transactions if category name changed
     if (oldName !== updatedCategory.name) {
       await Transaction.updateMany(
         {
@@ -67,21 +74,24 @@ const categoryController = {
     }
     res.json(updatedCategory);
   }),
-  //! delete
+
+  // delete category
   delete: asyncHandler(async (req, res) => {
     const category = await Category.findById(req.params.id);
     if (category && category.user.toString() === req.user.toString()) {
-      //!  Update transactions that have this category
+      // update transactions that use this category
       const defaultCategory = "Uncategorized";
       await Transaction.updateMany(
         { user: req.user, category: category.name },
         { $set: { category: defaultCategory } }
       );
-      //! Remove category
+
+      // remove category
       await Category.findByIdAndDelete(req.params.id);
       res.json({ message: "Category removed and transactions updated" });
     } else {
-      res.json({ message: "Category not found or user not authorized" });
+      res.status(404);
+      throw new Error("Category not found or user not authorized");
     }
   }),
 };

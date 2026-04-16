@@ -7,7 +7,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import App from "./App.jsx";
 import "./index.css";
 import { store } from "./redux/store/store.js";
-//! instance of react query
+// react query client instance
 const client = new QueryClient();
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
