@@ -2,8 +2,15 @@ const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../model/User");
+const {
+  signAccessToken,
+  signRefreshToken,
+} = require("../utils/authTokens");
 
 const JWT_SECRET = process.env.JWT_SECRET || "moneyWiseKey";
+// optional separate secret so refresh tokens cannot be verified as access
+const JWT_REFRESH_SECRET =
+  process.env.JWT_REFRESH_SECRET || JWT_SECRET;
 
 const usersController = {
   // register a new user
@@ -58,18 +65,43 @@ const usersController = {
       throw new Error("Invalid login credentials");
     }
 
-    // generate jwt token
-    const token = jwt.sign({ id: user._id }, JWT_SECRET, {
-      expiresIn: "30d",
-    });
+    // issue access (24h by default) and refresh (7d by default) tokens
+    const accessToken = signAccessToken(user._id, JWT_SECRET);
+    const refreshToken = signRefreshToken(user._id, JWT_REFRESH_SECRET);
 
     res.json({
       message: "Login success",
-      token,
+      accessToken,
+      refreshToken,
       id: user._id,
       email: user.email,
       username: user.username,
     });
+  }),
+
+  // exchange refresh token for a new access token
+  refreshAccessToken: asyncHandler(async (req, res) => {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+      res.status(400);
+      throw new Error("Refresh token is required");
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
+    } catch (e) {
+      res.status(401);
+      throw new Error("Invalid or expired refresh token");
+    }
+
+    if (decoded.tokenType !== "refresh") {
+      res.status(401);
+      throw new Error("Invalid refresh token");
+    }
+
+    const accessToken = signAccessToken(decoded.id, JWT_SECRET);
+    res.json({ accessToken });
   }),
 
   // get current user profile

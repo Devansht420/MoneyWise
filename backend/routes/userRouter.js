@@ -6,6 +6,11 @@ const userRouter = express.Router();
 userRouter.post("/api/v1/users/register", usersController.register);
 // login
 userRouter.post("/api/v1/users/login", usersController.login);
+// refresh access token (public, uses refresh token body)
+userRouter.post(
+  "/api/v1/users/refresh-token",
+  usersController.refreshAccessToken
+);
 // profile
 userRouter.get(
   "/api/v1/users/profile",

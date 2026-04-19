@@ -1,6 +1,4 @@
-import axios from "axios";
-import { BASE_URL } from "../../utils/url";
-import { getUserFromStorage } from "../../utils/getUserFromStorage";
+import { http } from "../../utils/httpClient";
 
 // add transaction
 export const addTransactionAPI = async ({
@@ -10,55 +8,26 @@ export const addTransactionAPI = async ({
   description,
   amount,
 }) => {
-  const token = getUserFromStorage();
-  const response = await axios.post(
-    `${BASE_URL}/transactions/create`,
-    {
-      category,
-      date,
-      description,
-      amount,
-      type,
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-  // return response data
-  return response.data;
-};
-
-// update transaction
-export const updateCategoryAPI = async ({ name, type, id }) => {
-  const token = getUserFromStorage();
-  const response = await axios.put(
-    `${BASE_URL}/categories/update/${id}`,
-    {
-      name,
-      type,
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-  // return response data
-  return response.data;
-};
-
-// delete transaction
-export const deleteCategoryAPI = async (id) => {
-  const token = getUserFromStorage();
-  const response = await axios.delete(`${BASE_URL}/categories/delete/${id}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+  const { data } = await http.post("/transactions/create", {
+    category,
+    date,
+    description,
+    amount,
+    type,
   });
-  // return response data
-  return response.data;
+  return data;
+};
+
+// update category (same path as category service; kept name for compatibility)
+export const updateCategoryAPI = async ({ name, type, id }) => {
+  const { data } = await http.put(`/categories/update/${id}`, { name, type });
+  return data;
+};
+
+// delete category
+export const deleteCategoryAPI = async (id) => {
+  const { data } = await http.delete(`/categories/delete/${id}`);
+  return data;
 };
 
 // list transactions
@@ -68,13 +37,8 @@ export const listTransactionsAPI = async ({
   startDate,
   endDate,
 }) => {
-  const token = getUserFromStorage();
-  const response = await axios.get(`${BASE_URL}/transactions/lists`, {
+  const { data } = await http.get("/transactions/lists", {
     params: { category, endDate, startDate, type },
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
   });
-  // return response data
-  return response.data;
+  return data;
 };

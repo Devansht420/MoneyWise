@@ -8,7 +8,7 @@ It supports user authentication, category management, and transaction tracking w
 - Frontend: React, Vite, Redux Toolkit, React Query, Tailwind CSS
 - Backend: Node.js, Express, Mongoose
 - Database: MongoDB
-- Auth: JWT with bcrypt password hashing
+- Auth: JWT access token (24h) + refresh token (7d), bcrypt password hashing
 
 ## Project Structure
 
@@ -19,11 +19,12 @@ It supports user authentication, category management, and transaction tracking w
 
 1. User registers with `username`, `email`, and `password`.
 2. Backend hashes the password with bcrypt and stores the user.
-3. User logs in and receives a signed JWT token.
-4. Frontend stores user info in local storage.
-5. Protected API calls include `Authorization: Bearer <token>`.
-6. Backend middleware verifies JWT and attaches `req.user`.
-7. Controllers use `req.user` to scope data to the logged-in user.
+3. User logs in and receives a short-lived **access** JWT and a longer-lived **refresh** JWT.
+4. Frontend stores both in `localStorage` with user profile fields.
+5. Protected API calls send `Authorization: Bearer <accessToken>`.
+6. If the access token expires, the shared axios client calls `POST /users/refresh-token` once, saves the new access token, and retries the request.
+7. Backend middleware verifies only **access** tokens and attaches `req.user`.
+8. Controllers use `req.user` to scope data to the logged-in user.
 
 ## API Overview
 
@@ -31,6 +32,7 @@ It supports user authentication, category management, and transaction tracking w
 
 - `POST /api/v1/users/register`
 - `POST /api/v1/users/login`
+- `POST /api/v1/users/refresh-token` (public; body: `{ refreshToken }`)
 - `GET /api/v1/users/profile` (protected)
 - `PUT /api/v1/users/change-password` (protected)
 - `PUT /api/v1/users/update-profile` (protected)
@@ -79,6 +81,24 @@ It supports user authentication, category management, and transaction tracking w
 
 Create `backend/.env`:
 
+```env
+PORT=8000
+MONGO_URI=mongodb://localhost:27017/mern-expenses
+CLIENT_URL=http://localhost:5173
+JWT_SECRET=moneyWiseKey
+JWT_REFRESH_SECRET=moneyWiseKeyRefresh
+JWT_ACCESS_EXPIRES=24h
+JWT_REFRESH_EXPIRES=7d
+NODE_ENV=development
+```
+
+`JWT_REFRESH_SECRET` may match `JWT_SECRET` for local dev; use a distinct value in production so refresh tokens cannot be verified with the access secret by mistake.
+
+Optional `frontend/.env`:
+
+```env
+VITE_API_URL=http://localhost:8000/api/v1
+```
 
 ## Run Locally
 

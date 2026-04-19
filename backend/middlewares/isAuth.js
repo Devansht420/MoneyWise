@@ -11,8 +11,12 @@ const isAuthenticated = async (req, res, next) => {
   }
 
   try {
-    // verify token and attach user id to request
+    // verify access token only (not refresh)
     const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.tokenType !== "access") {
+      res.status(401);
+      return next(new Error("Invalid access token"));
+    }
     req.user = decoded.id;
     return next();
   } catch (error) {

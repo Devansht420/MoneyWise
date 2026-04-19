@@ -1,12 +1,9 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
-import { getUserFromStorage } from "../../utils/getUserFromStorage";
+import { hasAuthSession } from "../../utils/getUserFromStorage";
 
 const AuthRoute = ({ children }) => {
-  //get the token
-  const token = getUserFromStorage();
-
-  if (token) {
+  if (hasAuthSession()) {
     return children;
   } else {
     return <Navigate to="/login" />;

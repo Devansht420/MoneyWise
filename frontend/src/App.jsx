@@ -1,8 +1,10 @@
+import { useEffect } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import HeroSection from "./components/Home/HomePage";
 import PublicNavbar from "./components/Navbar/PublicNavbar";
 import LoginForm from "./components/Users/Login";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { loginAction } from "./redux/slice/authSlice";
 import RegistrationForm from "./components/Users/Register";
 import PrivateNavbar from "./components/Navbar/PrivateNavbar";
 import AddCategory from "./components/Category/AddCategory";
@@ -14,7 +16,23 @@ import UserProfile from "./components/Users/UserProfile";
 import AuthRoute from "./components/Auth/AuthRoute";
 
 function App() {
+  const dispatch = useDispatch();
   const user = useSelector((state) => state?.auth?.user);
+
+  // keep redux user in sync after silent token refresh
+  useEffect(() => {
+    const sync = () => {
+      try {
+        const raw = localStorage.getItem("userInfo");
+        const next = raw ? JSON.parse(raw) : null;
+        if (next) dispatch(loginAction(next));
+      } catch {
+        /* ignore */
+      }
+    };
+    window.addEventListener("moneywise:auth-refresh", sync);
+    return () => window.removeEventListener("moneywise:auth-refresh", sync);
+  }, [dispatch]);
 
   return (
     <BrowserRouter>
